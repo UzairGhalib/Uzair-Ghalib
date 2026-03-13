@@ -25,33 +25,34 @@ export default function ContactForm() {
       subject: "",
       message: "",
     },
+
     onSubmit: async (values, { setSubmitting, resetForm }) => {
       try {
-        console.log("Form Data:", values);
 
-        // save a local copy
-        localStorage.setItem("contactFormData", JSON.stringify(values));
+        console.log("Sending Data:", values);
 
-        // send to backend API
-        const res = await fetch("http://localhost:5000/api/contact", {
+        const response = await fetch("http://localhost:5000/api/contact", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+          },
           body: JSON.stringify(values),
         });
 
-        if (!res.ok) throw new Error(`Network response was not ok: ${res.status}`);
+        const data = await response.json();
 
-        const data = await res.json();
-
-        if (data && (data.success === true || data.status === "ok")) {
+        if (response.ok && data.success) {
           alert("Message sent successfully!");
           resetForm();
         } else {
-          alert("Failed to send message. Please try again later.");
+          alert(data.message || "Failed to send message.");
         }
+
       } catch (error) {
-        console.error(error);
-        alert("An error occurred while sending the message.");
+
+        console.error("Submission error:", error);
+        alert("Server error. Please try again.");
+
       } finally {
         setSubmitting(false);
       }
@@ -172,9 +173,10 @@ export default function ContactForm() {
           }}
           whileTap={{ scale: 0.98 }}
           type="submit"
+          disabled={formik.isSubmitting}
           className="bg-[#00d4ff] text-black font-bold py-3 px-6 rounded-lg transition-all shadow-lg"
         >
-          Send Message
+          {formik.isSubmitting ? "Sending..." : "Send Message"}
         </motion.button>
 
       </motion.form>
